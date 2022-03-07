@@ -25,6 +25,9 @@ enemy_list = []
 enemy_projectiles = []
 player_projectiles = []
 
+# Events
+
+
 
 # This class stores all player data, creates the game object for the player and generally just deals with the player.
 class PlayerClass:
@@ -46,17 +49,24 @@ def enemy_shoot(chance):
     return num * chance
 
 
+def spawn_projectile(pos_tuple, player):
+    if player:
+        player_projectiles.append(pos_tuple)
+        print(player_projectiles)
+
+
 # Here we check the various events we are looking out for in the program.
 def check_events(player_obj):
     # This assigns a list of currents pressed keys to a "keys" variable, we then use this to check for player inputs and execute the relevant code.
-    VEL = 10
+    VEL = 4
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         player_obj.update_pos(VEL)
     if keys[pygame.K_RIGHT]:
         player_obj.update_pos(-VEL)
-    if keys[pygame.K_SPACE]:
-        pass
+    if keys[pygame.KEYDOWN]:
+        if len(player_projectiles) < 10:
+            spawn_projectile((player_obj.posx, 2067), True)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -75,6 +85,8 @@ def fps_counter():
 def draw_root(player_obj):
     ROOT.fill(BLACK)
     pygame.draw.rect(ROOT, GREEN, player_obj.load_player())
+    # for items in player_projectiles:
+    #     pygame.draw.rect(ROOT, WHITE, ())
     fps_counter()
     pygame.display.update()
 
