@@ -36,8 +36,8 @@ class PlayerClass:
     def load_player(self):
         return pygame.Rect(self.posx, self.posy, self.size, self.size)
 
-    def update_pos(self, new_pos):
-        self.posx = self.posx - new_pos
+    def update_pos(self, VEL):
+        self.posx -= VEL
 
 
 # This class handles all the projectiles, both player and enemy
@@ -54,14 +54,8 @@ class Projectiles:
         self.posy -= self.vel
 
     def check_hit(self):
-        reference_list = list(projectiles)
-        index = reference_list.index(self)
-        reference_list.pop(index)
         if self.posy < 0:
             return True
-        for item in reference_list:
-            if self.posy == item.posy:
-                return True
 
 
 # This function is for the chance of an enemy to shoot. Chance should be a float between 1 and 0.1
@@ -75,9 +69,9 @@ def check_events(player_obj):
     # This assigns a list of currents pressed keys to a "keys" variable, we then use this to check for player inputs and execute the relevant code.
     VEL = 4
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
+    if keys[pygame.K_LEFT] and player_obj.posx > 0:
         player_obj.update_pos(VEL)
-    if keys[pygame.K_RIGHT]:
+    if keys[pygame.K_RIGHT] and player_obj.posx + SIZE < WIDTH:
         player_obj.update_pos(-VEL)
 
     for event in pygame.event.get():
