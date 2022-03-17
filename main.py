@@ -45,9 +45,18 @@ class EnemyClass:
     def __init__(self, posx, posy):
         self.posx = posx
         self.posy = posy
+        self.rect = pygame.Rect(self.posx, self.posy, 20, 20)
 
     def spawn_enemy(self):
-        pass
+        return self.rect
+
+    def update_pos(self, VEL):
+        self.rect.x -= VEL
+
+    def enemy_shoot(self, chance):
+        num = randrange(0, 100)
+        if num > chance:
+            projectiles.append(Projectiles(self.posx, self.posy, -8))
 
 
 # This class handles all the projectiles, both player and enemy
@@ -75,12 +84,6 @@ class Projectiles:
         if player_obj.rect.collidepoint(self.posx, self.posy):
             player_obj.lives -= 1
             return True
-
-
-# This function is for the chance of an enemy to shoot. Chance should be a float between 1 and 0.1
-def enemy_shoot(chance):
-    num = randrange(0, 100)
-    return num * chance
 
 
 # Here we check the various events we are looking out for in the program.
@@ -126,7 +129,6 @@ def draw_root(player_obj):
 def main():
     screen_center = WIDTH - WIDTH//2 - SIZE//2
     player_object = PlayerClass(screen_center, HEIGHT - SIZE * 2, SIZE, 3)
-    #test = pygame.Rect(screen_center, HEIGHT - SIZE * 2, SIZE, 3)
     while True:
         check_events(player_object)
         draw_root(player_object)
