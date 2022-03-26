@@ -10,8 +10,8 @@ WHITE = 255, 255, 255
 RED = 255, 0, 0
 GREEN = 0, 255, 0
 BLUE = 0, 0, 255
-WIDTH, HEIGHT = 600, 600  # Dimensions of the window
-FPS = 30
+WIDTH, HEIGHT = 800, 800  # Dimensions of the window
+FPS = 60
 SIZE = 20  # This is the size of the player and enemies
 
 # Pygame variables
@@ -20,6 +20,11 @@ ROOT = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 FONT = pygame.font.Font(None, 24)  # The font for any text in-game
 screen_center = WIDTH - WIDTH // 2 - SIZE // 2
+ENEMY_MOVE_EVENT = 25  # This is an event to move the enemies
+EVENT_TIMER = 1000
+pygame.time.set_timer(ENEMY_MOVE_EVENT, EVENT_TIMER)
+direction = 1
+move_count = 0
 
 # These lists hold the references(?) for the class objects related to the list.
 enemy_list = []
@@ -46,7 +51,7 @@ class EnemyClass:
     def __init__(self, posx, posy):
         self.posx = posx
         self.posy = posy
-        self.rect = pygame.Rect(self.posx, self.posy, 20, 20)
+        self.rect = pygame.Rect(self.posx, self.posy, SIZE, SIZE)
 
     def get_enemy(self):
         return self.rect
@@ -91,7 +96,10 @@ class Projectiles:
 # Here we check the various events we are looking out for in the program.
 def check_events(player_obj):
     # This assigns a list of currents pressed keys to a "keys" variable, we then use this to check for player inputs and execute the relevant code.
-    VEL = 8
+    global direction
+    global move_count
+    VEL = 4
+    skip = False
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] and player_obj.rect.x > 0:
         player_obj.update_pos(VEL)
@@ -102,13 +110,26 @@ def check_events(player_obj):
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == ENEMY_MOVE_EVENT:
+            if move_count >= 8:
+                direction = direction * -1
+                move_count = 0
+                skip = True
+                for item in enemy_list:
+                    item.rect.y += SIZE * 2
+            for item in enemy_list:
+                if not skip:
+                    skip = False
+                    item.rect.x += VEL * 4 * direction
+            move_count += 1
+
         # This statement check if the spacebar is pressed and spawns on projectile for each press. Holding space doesn't spawn a ton of projectiles all at once.
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and len(projectiles_list) < 10:
-                projectiles_list.append(Projectiles(player_obj.rect.x, player_obj.rect.y - SIZE / 2, 8))
+                projectiles_list.append(Projectiles(player_obj.rect.x, player_obj.rect.y - SIZE / 2, 4))
 
 
-# This creates the FPS counter at the top left
+# This creates the FPS counter at the top left.
 def fps_counter():
     count = str(int(clock.get_fps()))
     fps_txt = FONT.render(count, True, WHITE)
@@ -119,6 +140,8 @@ def fps_counter():
 def draw_root(player_obj):
     ROOT.fill(BLACK)
     pygame.draw.rect(ROOT, GREEN, player_obj.get_player())
+    # pygame.draw.rect(ROOT, WHITE, (0, 0, 10, 10))
+    # pygame.draw.rect(ROOT, WHITE, (WIDTH - 10, 0, 10, 10))
     for item in projectiles_list:
         item.check_hit(player_obj)
         pygame.draw.rect(ROOT, WHITE, item.draw_projectile())
@@ -130,16 +153,22 @@ def draw_root(player_obj):
 
 
 def main():
-    c = 8
-    X, Y = 20, 30
+    num = 24
+    c = num
+    x, y = 20, 30
+    z = 4
     player_object = PlayerClass(screen_center, HEIGHT - SIZE * 2, SIZE, 3)
-    while True:
-        if c > 0:
-            enemy_list.append(EnemyClass(X, Y))
-            X += 40
-            c -= 1
-        else:
+    while c > 0:
+        enemy_list.append(EnemyClass(x, y))
+        x += SIZE * 2
+        c -= 1
+        if z == 0 and c < 9:
             break
+        if c < 9:
+            y += SIZE * 2
+            c = num
+            x = 20
+            z -= 1
 
     while True:
         check_events(player_object)
