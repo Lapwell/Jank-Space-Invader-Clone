@@ -13,6 +13,7 @@ BLUE = 0, 0, 255
 WIDTH, HEIGHT = 800, 800  # Dimensions of the window
 FPS = 60
 SIZE = 20  # This is the size of the player and enemies
+CHANCE = 4
 
 # Pygame variables
 pygame.display.set_caption('Jank Space Invader Clone')  # Sets the name of the window
@@ -38,7 +39,7 @@ ENEMY_MOVE_EVENT = 25  # This is an event to move the enemies
 ENEMY_MOVE_TIMER = 1200
 pygame.time.set_timer(ENEMY_MOVE_EVENT, ENEMY_MOVE_TIMER)
 ENEMY_SHOOT_EVENT = 26
-ENEMY_SHOOT_TIMER = 1200
+ENEMY_SHOOT_TIMER = 2000
 pygame.time.set_timer(ENEMY_SHOOT_EVENT, ENEMY_SHOOT_TIMER)
 
 # These lists hold the references(?) for the class objects related to the list.
@@ -66,7 +67,6 @@ class PlayerClass:
         if self.lives <= 0:
             global game_over
             game_over = True
-            print('GAME OVER')
 
 
 class EnemyClass:
@@ -109,8 +109,8 @@ class Projectiles:
             if item.rect.colliderect(self.rect) and not self.from_enemy:
                 enemy_list.pop(enemy_list.index(item))
                 projectiles_list.pop(projectiles_list.index(self))
+                return True
         if player_obj.rect.colliderect(self.rect):
-            print('Hit player')
             enemy_projectiles_list.pop(enemy_projectiles_list.index(self))
             player_obj.lives -= 1
 
@@ -135,8 +135,8 @@ def check_events(player_obj):
         # This event is to allow the enemies to shoot. Every time the event flag is raised, all enemies have a chance to shoot.
         if event.type == ENEMY_SHOOT_EVENT:
             for item in enemy_list:
-                chance = random.randrange(0, 101)
-                if chance > 96:
+                num = random.randrange(0, len(enemy_list), 2)
+                if num < CHANCE:
                     enemy_projectiles_list.append(Projectiles(item.rect.x, item.rect.y, -4, True))
         #  This event is about letting enemies move in steps, instead of a smooth slide across the screen.
         if event.type == ENEMY_MOVE_EVENT:
@@ -148,10 +148,8 @@ def check_events(player_obj):
                     item.rect.y += SIZE * 2
             for item in enemy_list:
                 if not skip:  # This skip is so that the enemies don't move down and right/left in one movement. The enmies move down then left/right in two movements.
-                    skip = False
                     item.rect.x += VEL * 4 * direction
             move_count += 1
-
         # This statement check if the spacebar is pressed and spawns on projectile for each press. Holding space doesn't spawn a ton of projectiles all at once.
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and len(projectiles_list) < 10:
