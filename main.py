@@ -22,6 +22,12 @@ clock = pygame.time.Clock()
 FONT = pygame.font.Font(None, 24)  # The font for any text in-game
 screen_center = WIDTH - WIDTH // 2 - SIZE // 2
 
+# This is where images are imported
+image = pygame.image.load('Player_Ship.png').convert()  # This gets the player png image and converts it (i don't understand convert() very well).
+player_ship = pygame.transform.scale(image, (40, 40))  # This makes the image bigger.
+image2 = pygame.image.load('Enemy_Ship.png').convert()
+enemy_ship = pygame.transform.scale(image2, (40, 40))
+
 # Other variables.
 game_over = False
 win = False
@@ -55,10 +61,9 @@ class PlayerClass:
         self.posy = posy
         self.size = size
         self.lives = lives
-        self.rect = pygame.Rect(self.posx, self.posy, self.size, self.size)
-
-    def get_player(self):
-        return self.rect
+        self.player_ship = player_ship
+        self.rect = self.player_ship.get_rect()
+        self.rect.center = (WIDTH / 2, HEIGHT - SIZE)
 
     def update_pos(self, VEL):
         self.rect.x -= VEL
@@ -73,7 +78,10 @@ class EnemyClass:
     def __init__(self, posx, posy):
         self.posx = posx
         self.posy = posy
-        self.rect = pygame.Rect(self.posx, self.posy, SIZE, SIZE)
+        self.ship = enemy_ship
+        self.rect = self.ship.get_rect()
+        self.rect.x = self.posx
+        self.rect.y = self.posy
 
     def get_enemy(self):
         return self.rect
@@ -122,7 +130,7 @@ def check_events(player_obj):
     global move_count
     global game_over
     VEL = 4
-    skip = False
+    hit_wall = False
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] and player_obj.rect.x > 0:
         player_obj.update_pos(VEL)
@@ -140,20 +148,28 @@ def check_events(player_obj):
                     enemy_projectiles_list.append(Projectiles(item.rect.x, item.rect.y, -4, True))
         #  This event is about letting enemies move in steps, instead of a smooth slide across the screen.
         if event.type == ENEMY_MOVE_EVENT:
-            if move_count >= 8:
-                direction = direction * -1
-                move_count = 0
-                skip = True
-                for item in enemy_list:
-                    item.rect.y += SIZE * 2
             for item in enemy_list:
-                if not skip:  # This skip is so that the enemies don't move down and right/left in one movement. The enmies move down then left/right in two movements.
-                    item.rect.x += VEL * 4 * direction
-            move_count += 1
+                if item.rect.x + 40 > WIDTH - 10 or item.rect.x < 10:
+                    for item2 in enemy_list:
+                        item2.rect.y += 10
+                    direction = direction * -1
+            for item in enemy_list:
+                item.rect.x += VEL * 4 * direction
+
+            # if move_count >= 8:
+            #     direction = direction * -1
+            #     move_count = 0
+            #     skip = True
+            #     for item in enemy_list:
+            #         item.rect.y += SIZE * 2
+            # for item in enemy_list:
+            #     if not skip:  # This skip is so that the enemies don't move down and right/left in one movement. The enmies move down then left/right in two movements.
+            #         item.rect.x += VEL * 4 * direction
+            # move_count += 1
         # This statement check if the spacebar is pressed and spawns on projectile for each press. Holding space doesn't spawn a ton of projectiles all at once.
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and len(projectiles_list) < 10:
-                projectiles_list.append(Projectiles(player_obj.rect.x, player_obj.rect.y - SIZE / 2, 4, False))
+                projectiles_list.append(Projectiles(player_obj.rect.x + 10, player_obj.rect.y - SIZE / 2, 4, False))
 
 
 # This creates the FPS counter at the top left.
@@ -166,7 +182,7 @@ def fps_counter():
 # This function is used to update the window every frame.
 def draw_root(player_obj):
     ROOT.fill(BLACK)
-    pygame.draw.rect(ROOT, GREEN, player_obj.get_player())
+    ROOT.blit(player_obj.player_ship, player_obj.rect)
     # pygame.draw.rect(ROOT, WHITE, (0, 0, 10, 10))
     # pygame.draw.rect(ROOT, WHITE, (WIDTH - 10, 0, 10, 10))
     for item in projectiles_list:
@@ -181,20 +197,20 @@ def draw_root(player_obj):
         item.check_hit(player_obj)
         item.move_projectile()
     for item in enemy_list:
-        pygame.draw.rect(ROOT, RED, item.get_enemy())
+        ROOT.blit(enemy_ship, item.rect)
     fps_counter()
     pygame.display.update()
 
 
 def main():
-    num = 24
+    num = 20
     c = num
-    x, y = 20, 30
+    x, y = 20, 20
     z = 4
     player_object = PlayerClass(screen_center, HEIGHT - SIZE * 2, SIZE, 3)
     while c > 0:
         enemy_list.append(EnemyClass(x, y))
-        x += SIZE * 2
+        x += SIZE * 3
         c -= 1
         if z == 0 and c < 9:
             break
