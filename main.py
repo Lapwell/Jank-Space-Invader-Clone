@@ -155,6 +155,9 @@ def check_events(player_obj):
                     direction = direction * -1
             for item in enemy_list:
                 item.rect.x += VEL * 4 * direction
+               for item in enemy_list:
+                if item.rect.x <= 750:
+                    game_over = True
 
             # if move_count >= 8:
             #     direction = direction * -1
